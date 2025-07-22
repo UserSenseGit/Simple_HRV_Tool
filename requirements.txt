@@ -3,3 +3,5 @@ numpy
 pandas
 pyhrv
 plotly
+biosppy
+peakutils
