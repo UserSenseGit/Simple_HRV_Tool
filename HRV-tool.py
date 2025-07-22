@@ -26,7 +26,7 @@ if uploaded_file:
     st.markdown("### Gemeten hartslag (BPM) over volledige reeks")
 
     # Aantal regio’s selecteren
-    num_regions = st.number_input("Aantal regio’s", min_value=1, max_value=10, value=2, step=1)
+    num_regions = st.number_input("Aantal regio’s", min_value=1, max_value=10, value=1, step=1)
 
     # Definieer sliders in een expander
     selections = []
