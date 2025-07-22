@@ -86,7 +86,7 @@ if uploaded_file:
         yaxis_title="BPM",
         height=350,
         margin=dict(l=10, r=10, t=40, b=20),
-        hovermode='x unified'
+        hovermode='x unified',
         yaxis=dict(range=[45, 85])
     )
 
