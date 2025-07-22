@@ -1,9 +1,9 @@
-st.set_page_config(layout="centered", page_title="HRV Tool", page_icon="🫀")
 import streamlit as st
 import pandas as pd
 import numpy as np
 import pyhrv.time_domain as td
 
+st.set_page_config(layout="centered", page_title="HRV Tool", page_icon="🫀")
 st.set_page_config(layout="wide")
 st.title("Kubios-achtige HRV Analyse")
 
