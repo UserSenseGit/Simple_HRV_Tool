@@ -116,4 +116,4 @@ if uploaded_file:
 
 play sound
 Avatar maker from photo
-✕
+
