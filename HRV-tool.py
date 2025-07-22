@@ -5,7 +5,7 @@ import pyhrv.time_domain as td
 import plotly.graph_objects as go
 
 st.set_page_config(layout="wide", page_title="HRV Tool", page_icon="🫀")
-st.title("Kubios-achtige HRV Analyse")
+st.title("HRV-tool")
 
 uploaded_file = st.file_uploader("Upload een R-R interval bestand (txt of csv, 1 kolom, ms)", type=["txt", "csv"])
 
