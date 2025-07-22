@@ -113,7 +113,3 @@ if uploaded_file:
 
             combined_hr = 60000 / combined
             st.line_chart(combined_hr, height=250, use_container_width=True)
-
-play sound
-Avatar maker from photo
-
