@@ -87,7 +87,7 @@ if uploaded_file:
         height=350,
         margin=dict(l=10, r=10, t=40, b=20),
         hovermode='x unified',
-        yaxis=dict(range=[45, 85])
+        yaxis=dict(range=[45, 75])
     )
 
     fig.update_xaxes(rangeslider_visible=True)
