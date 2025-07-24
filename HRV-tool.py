@@ -49,9 +49,11 @@ if uploaded_file:
             slider_ranges.append((start, end))
 
             if len(region) < 2:
-                st.warning(f"Regio {i+1} heeft te weinig data (<2).")
+               st.warning(f"Regio {i+1} heeft te weinig data (<2).")
             else:
-                selections.append(region)
+               gebruiken = st.checkbox(f"Regio {i+1} gebruiken in analyse?", value=True, key=f"use_{i}")
+                if gebruiken:
+                    selections.append(region)
                 rmssd = td.rmssd(region)['rmssd']
                 rmssd_per_regio.append({
                     "Regio": f"{i+1}",
