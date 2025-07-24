@@ -80,6 +80,15 @@ if uploaded_file:
             annotation_position="top left"
         )
 
+    st.markdown("### Y-as instellingen (BPM bereik)")
+        y_min, y_max = st.slider(
+        "Stel BPM bereik in voor verticale zoom",
+        min_value=int(np.min(full_hr)) - 10,
+        max_value=int(np.max(full_hr)) + 10,
+        value=(int(np.min(full_hr)) - 5, int(np.max(full_hr)) + 5),
+        step=1
+    )
+
     fig.update_layout(
         title="Gemeten hartslag (BPM) over volledige reeks",
         xaxis_title="Index",
@@ -87,6 +96,8 @@ if uploaded_file:
         height=350,
         margin=dict(l=10, r=10, t=40, b=20),
         hovermode='x unified',
+        yaxis=dict(range=[y_min, y_max]),
+
     )
 
     fig.update_xaxes(rangeslider_visible=True)
