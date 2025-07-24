@@ -81,7 +81,7 @@ if uploaded_file:
         )
 
     st.markdown("### Y-as instellingen (BPM bereik)")
-        y_min, y_max = st.slider(
+    y_min, y_max = st.slider(
         "Stel BPM bereik in voor verticale zoom",
         min_value=int(np.min(full_hr)) - 10,
         max_value=int(np.max(full_hr)) + 10,
