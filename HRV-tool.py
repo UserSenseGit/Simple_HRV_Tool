@@ -52,7 +52,7 @@ if uploaded_file:
                st.warning(f"Regio {i+1} heeft te weinig data (<2).")
             else:
                gebruiken = st.checkbox(f"Regio {i+1} gebruiken in analyse?", value=True, key=f"use_{i}")
-                if gebruiken:
+            if gebruiken:
                     selections.append(region)
                 rmssd = td.rmssd(region)['rmssd']
                 rmssd_per_regio.append({
