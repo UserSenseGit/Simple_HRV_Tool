@@ -21,9 +21,24 @@ if uploaded_file:
         st.error("Kon de gegevens niet omzetten naar numerieke R-R intervallen.")
         st.stop()
 
+    # Bereken BPM van volledige reeks
     full_hr = 60000 / rr_intervals
 
-    st.markdown("### Gemeten hartslag (BPM) over volledige reeks")
+    # Slider voor BPM bereik (threshold)
+    bpm_min, bpm_max = st.slider(
+        "Selecteer BPM-bereik (waarden buiten dit bereik worden genegeerd)",
+        min_value=int(np.min(full_hr)),
+        max_value=int(np.max(full_hr)),
+        value=(int(np.min(full_hr)), int(np.max(full_hr))),
+        step=1
+    )
+
+    # Filter R-R en BPM op basis van gekozen bereik
+    mask = (full_hr >= bpm_min) & (full_hr <= bpm_max)
+    rr_intervals = rr_intervals[mask]
+    full_hr = full_hr[mask]
+
+    st.markdown("### Gemeten hartslag (BPM) over gefilterde reeks")
 
     # Aantal regio’s selecteren
     num_regions = st.number_input("Aantal regio’s", min_value=1, max_value=10, value=1, step=1)
@@ -53,9 +68,9 @@ if uploaded_file:
             else:
                gebruiken = st.checkbox(f"Regio {i+1} gebruiken in analyse?", value=True, key=f"use_{i}")
             if gebruiken:
-                    selections.append(region)
-                    rmssd = td.rmssd(region)['rmssd']
-                    rmssd_per_regio.append({
+                selections.append(region)
+                rmssd = td.rmssd(region)['rmssd']
+                rmssd_per_regio.append({
                     "Regio": f"{i+1}",
                     "Start": start,
                     "Einde": end,
@@ -83,23 +98,25 @@ if uploaded_file:
         )
 
     st.markdown("### Y-as instellingen (BPM bereik)")
-    y_min, y_max = st.slider(
-        "Stel BPM bereik in voor verticale zoom",
-        min_value=int(np.min(full_hr)) - 10,
-        max_value=int(np.max(full_hr)) + 10,
-        value=(int(np.min(full_hr)) - 5, int(np.max(full_hr)) + 5),
-        step=1
-    )
+    if len(full_hr) > 0:
+        y_min, y_max = st.slider(
+            "Stel BPM bereik in voor verticale zoom",
+            min_value=int(np.min(full_hr)) - 10,
+            max_value=int(np.max(full_hr)) + 10,
+            value=(int(np.min(full_hr)) - 5, int(np.max(full_hr)) + 5),
+            step=1
+        )
+    else:
+        y_min, y_max = 40, 180
 
     fig.update_layout(
-        title="Gemeten hartslag (BPM) over volledige reeks",
+        title="Gemeten hartslag (BPM) over gefilterde reeks",
         xaxis_title="Index",
         yaxis_title="BPM",
         height=350,
         margin=dict(l=10, r=10, t=40, b=20),
         hovermode='x unified',
         yaxis=dict(range=[y_min, y_max]),
-
     )
 
     fig.update_xaxes(rangeslider_visible=True)
