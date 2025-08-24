@@ -13,24 +13,25 @@ bestand = st.file_uploader("Upload je CSV-bestand", type=["csv", "txt"])
 if bestand is not None:
     try:
         # Inlezen met komma als separator en eerste regel als header
-        df = pd.read_csv(bestand, sep=',', header=0)
+        df = pd.read_csv(bestand, sep=',', header=0, encoding='utf-8-sig')
     except Exception as e:
         st.error(f"Kon bestand niet inlezen: {e}")
         st.stop()
 
-        st.write("Kolommen gevonden:", df.columns.tolist())
+    # Kolomnamen opschonen: spaties verwijderen en lowercase maken
+        df.columns = df.columns.str.strip().str.lower()
+        st.write("Kolommen gevonden na opschonen:", df.columns.tolist())
 
-    # Controleer vereiste kolommen
-        required_cols = {"rr", "since_start"}
-    if not required_cols.issubset(set(df.columns.str.lower())):
+    required_cols = {"rr", "since_start"}
+    if not required_cols.issubset(set(df.columns)):
         st.error(f"Bestand mist vereiste kolommen: {required_cols}")
         st.stop()
 
-    # Opschonen
+    # Opschonen van waarden
         df['rr'] = df['rr'].astype(str).str.strip()
         df['since_start'] = df['since_start'].astype(str).str.strip()
 
-    # Alleen numerieke waarden behouden
+    # Filter alleen numerieke waarden
         df = df[df['rr'].str.replace('.', '', 1).str.isnumeric()]
         df = df[df['since_start'].str.replace('.', '', 1).str.isnumeric()]
 
@@ -41,10 +42,14 @@ if bestand is not None:
     # Omzetten naar float en NumPy-array
         rr_intervals = np.array(df['rr'].astype(float).values)
         x_axis = np.array(df['since_start'].astype(float).values)
-    
-    # Bereken BPM van volledige reeks
+
+    # Bereken hartslag
         full_hr = 60000 / rr_intervals
 
+        st.success("CSV succesvol ingelezen en verwerkt!")
+        st.write("RR-intervals:", rr_intervals)
+        st.write("Hartslag:", full_hr)
+        
     # Slider voor BPM bereik (threshold)
     bpm_min, bpm_max = st.slider(
         "Selecteer BPM-bereik (waarden buiten dit bereik worden genegeerd)",
