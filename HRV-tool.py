@@ -8,7 +8,7 @@ st.set_page_config(layout="wide", page_title="HRV Tool", page_icon="🫀")
 st.title("HRV-tool")
 
 uploaded_file = st.file_uploader(
-    "Upload een bestand met: timestamp, rr, since_start", 
+    "Upload een bestand met: timestamp,  rr,  since_start", 
     type=["csv", "txt"]
 )
 
