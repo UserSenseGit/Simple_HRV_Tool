@@ -23,6 +23,23 @@ if uploaded_file:
     if not {"rr", "since_start"}.issubset(df.columns):
         st.error("Bestand mist vereiste kolommen: 'rr' en 'since_start'.")
         st.stop()
+    # Opschonen: spaties en onzichtbare tekens verwijderen
+        df['rr'] = df['rr'].astype(str).str.strip()
+        df['since_start'] = df['since_start'].astype(str).str.strip()
+
+# Alleen numerieke waarden behouden
+        df = df[df['rr'].str.replace('.', '', 1).str.isnumeric()]
+        df = df[df['since_start'].str.replace('.', '', 1).str.isnumeric()]
+
+# Omzetten naar float
+    try:
+        rr_intervals = df['rr'].astype(float).values
+        x_axis = df['since_start'].astype(float).values
+except ValueError as e:
+        st.error(f"Kon kolommen niet omzetten naar numeriek formaat: {e}")
+        st.stop()
+
+        st.success("CSV succesvol ingelezen en opgeschoond!")
 
     try:
         rr_intervals = df["rr"].astype(float).values
