@@ -7,49 +7,22 @@ import plotly.graph_objects as go
 st.set_page_config(layout="wide", page_title="HRV Tool", page_icon="🫀")
 st.title("HRV-tool")
 
-# Bestand uploaden
-bestand = st.file_uploader("Upload je CSV-bestand", type=["csv", "txt"])
+uploaded_file = st.file_uploader("Upload een R-R interval bestand (csv met kolom 'rr', ms)", type=["csv"])
 
-if bestand is not None:
+if uploaded_file:
     try:
-        # Inlezen met komma als separator en eerste regel als header
-        df = pd.read_csv(bestand, sep=',', header=0, encoding='utf-8-sig')
+        df = pd.read_csv(uploaded_file)
+        if "rr" not in df.columns:
+            st.error("Bestand bevat geen 'rr' kolom.")
+            st.stop()
+        rr_intervals = df["rr"].astype(float).values
     except Exception as e:
         st.error(f"Kon bestand niet inlezen: {e}")
         st.stop()
 
-    # Kolomnamen opschonen: spaties verwijderen en lowercase maken
-        df.columns = df.columns.str.strip().str.lower()
-        st.write("Kolommen gevonden na opschonen:", df.columns.tolist())
+    # Bereken BPM van volledige reeks
+    full_hr = 60000 / rr_intervals
 
-    required_cols = {"rr", "since_start"}
-    if not required_cols.issubset(set(df.columns)):
-        st.error(f"Bestand mist vereiste kolommen: {required_cols}")
-        st.stop()
-
-    # Opschonen van waarden
-        df['rr'] = df['rr'].astype(str).str.strip()
-        df['since_start'] = df['since_start'].astype(str).str.strip()
-
-    # Filter alleen numerieke waarden
-        df = df[df['rr'].str.replace('.', '', 1).str.isnumeric()]
-        df = df[df['since_start'].str.replace('.', '', 1).str.isnumeric()]
-
-    if df.empty:
-        st.error("Geen geldige gegevens gevonden in CSV na opschonen.")
-        st.stop()
-
-    # Omzetten naar float en NumPy-array
-        rr_intervals = np.array(df['rr'].astype(float).values)
-        x_axis = np.array(df['since_start'].astype(float).values)
-
-    # Bereken hartslag
-        full_hr = 60000 / rr_intervals
-
-        st.success("CSV succesvol ingelezen en verwerkt!")
-        st.write("RR-intervals:", rr_intervals)
-        st.write("Hartslag:", full_hr)
-        
     # Slider voor BPM bereik (threshold)
     bpm_min, bpm_max = st.slider(
         "Selecteer BPM-bereik (waarden buiten dit bereik worden genegeerd)",
@@ -63,7 +36,6 @@ if bestand is not None:
     mask = (full_hr >= bpm_min) & (full_hr <= bpm_max)
     rr_intervals = rr_intervals[mask]
     full_hr = full_hr[mask]
-    x_axis = x_axis[mask]
 
     st.markdown("### Gemeten hartslag (BPM) over gefilterde reeks")
 
@@ -79,7 +51,7 @@ if bestand is not None:
         for i in range(num_regions):
             st.markdown(f"#### Regio {i+1}")
             slider = st.slider(
-                f"Selecteer regio {i+1} (op basis van index in gefilterde reeks)",
+                f"Selecteer regio {i+1}",
                 min_value=0,
                 max_value=len(rr_intervals) - 1,
                 value=(0, min(50, len(rr_intervals) - 1)),
@@ -99,31 +71,33 @@ if bestand is not None:
                     rmssd = td.rmssd(region)['rmssd']
                     rmssd_per_regio.append({
                         "Regio": f"{i+1}",
-                        "Start (since_start)": x_axis[start],
-                        "Einde (since_start)": x_axis[end-1] if end > start else x_axis[start],
+                        "Start": start,
+                        "Einde": end,
                         "Waarden": len(region),
                         "RMSSD (ms)": round(rmssd, 2)
                     })
 
     # Maak interactieve plotly-grafiek
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x_axis, y=full_hr, mode='lines', name='HR (BPM)', line=dict(color='blue')))
+    fig.add_trace(go.Scatter(y=full_hr, mode='lines', name='HR (BPM)', line=dict(color='blue')))
 
-    kleuren = ['rgba(255,0,0,0.2)', 'rgba(0,255,0,0.2)', 'rgba(0,0,255,0.2)', 'rgba(255,165,0,0.2)', 
-               'rgba(128,0,128,0.2)', 'rgba(0,206,209,0.2)', 'rgba(255,20,147,0.2)', 'rgba(0,100,0,0.2)']
+    kleuren = [
+        'rgba(255,0,0,0.2)', 'rgba(0,255,0,0.2)', 'rgba(0,0,255,0.2)', 
+        'rgba(255,165,0,0.2)', 'rgba(128,0,128,0.2)', 'rgba(0,206,209,0.2)', 
+        'rgba(255,20,147,0.2)', 'rgba(0,100,0,0.2)'
+    ]
 
     for i, (start, end) in enumerate(slider_ranges):
-        if start < end:
-            fig.add_vrect(
-                x0=x_axis[start],
-                x1=x_axis[end-1],
-                fillcolor=kleuren[i % len(kleuren)],
-                opacity=0.3,
-                layer="below",
-                line_width=0,
-                annotation_text=f"Regio {i+1}",
-                annotation_position="top left"
-            )
+        fig.add_vrect(
+            x0=start,
+            x1=end,
+            fillcolor=kleuren[i % len(kleuren)],
+            opacity=0.3,
+            layer="below",
+            line_width=0,
+            annotation_text=f"Regio {i+1}",
+            annotation_position="top left"
+        )
 
     st.markdown("### Y-as instellingen (BPM bereik)")
     if len(full_hr) > 0:
@@ -139,7 +113,7 @@ if bestand is not None:
 
     fig.update_layout(
         title="Gemeten hartslag (BPM) over gefilterde reeks",
-        xaxis_title="Since start (s)",
+        xaxis_title="Index",
         yaxis_title="BPM",
         height=350,
         margin=dict(l=10, r=10, t=40, b=20),
