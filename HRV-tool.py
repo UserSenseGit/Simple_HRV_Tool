@@ -12,23 +12,21 @@ bestand = st.file_uploader("Upload je CSV-bestand", type=["csv", "txt"])
 
 if bestand is not None:
     try:
-        # Inlezen: eerste regel is header, spaties als separator
-        df = pd.read_csv(bestand, sep='\s+', header=0)
+        # Inlezen met komma als separator en eerste regel als header
+        df = pd.read_csv(bestand, sep=',', header=0)
     except Exception as e:
         st.error(f"Kon bestand niet inlezen: {e}")
         st.stop()
 
-    # Kolommen printen voor debug
         st.write("Kolommen gevonden:", df.columns.tolist())
 
     # Controleer vereiste kolommen
         required_cols = {"rr", "since_start"}
-        columns_set = set(df.columns.str.lower())  # lowercase en omzetten naar set
-    if not required_cols.issubset(columns_set):
+    if not required_cols.issubset(set(df.columns.str.lower())):
         st.error(f"Bestand mist vereiste kolommen: {required_cols}")
         st.stop()
 
-    # Opschonen: spaties verwijderen
+    # Opschonen
         df['rr'] = df['rr'].astype(str).str.strip()
         df['since_start'] = df['since_start'].astype(str).str.strip()
 
