@@ -24,11 +24,34 @@ if uploaded_file:
         st.error("Kon kolommen niet omzetten naar numeriek formaat.")
         st.stop()
    
-    # Zet de RR-waarden om naar float en daarna naar NumPy-array
-        rr_intervals = np.array(df['rr'].astype(float).values)
+    # Kolomnamen opschonen
+        df.columns = df.columns.str.strip().str.lower()
 
+    # Vereiste kolommen checken
+    if not {"rr", "since_start"}.issubset(df.columns):
+        st.error("Bestand mist vereiste kolommen: 'rr' en 'since_start'.")
+        st.stop()
+
+    # Opschonen van waarden
+        df['rr'] = df['rr'].astype(str).str.strip()
+        df['since_start'] = df['since_start'].astype(str).str.strip()
+
+    # Filter alleen numerieke waarden
+        df = df[df['rr'].str.replace('.', '', 1).str.isnumeric()]
+        df = df[df['since_start'].str.replace('.', '', 1).str.isnumeric()]
+
+    # Check of er nog data over is
+    if df.empty:
+        st.error("Geen geldige gegevens gevonden na opschonen.")
+        st.stop()
+
+    # Omzetten naar float en NumPy-array
+        rr_intervals = np.array(df['rr'].astype(float).values)
+        x_axis = np.array(df['since_start'].astype(float).values)
+
+    
     # Bereken BPM van volledige reeks
-    full_hr = 60000 / rr_intervals
+        full_hr = 60000 / rr_intervals
 
     # Slider voor BPM bereik (threshold)
     bpm_min, bpm_max = st.slider(
