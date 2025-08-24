@@ -14,18 +14,23 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file:
     try:
-        df = pd.read_csv(uploaded_file)
+        df = pd.read_csv(uploaded_file, header=None)
+    
     except Exception as e:
         st.error(f"Kon bestand niet lezen: {e}")
         st.stop()
         # CSV inlezen
+    
+        # Kolomnamen expliciet instellen
+        df.columns = ['timestamp', 'rr', 'since_start']
         
     except:
         st.error("Kon kolommen niet omzetten naar numeriek formaat.")
         st.stop()
    
-    # Kolomnamen opschonen
-        df.columns = df.columns.str.strip().str.lower()
+    # Opschonen van waarden
+        df['rr'] = df['rr'].astype(str).str.strip()
+        df['since_start'] = df['since_start'].astype(str).str.strip()
 
     # Vereiste kolommen checken
     if not {" rr", " since_start"}.issubset(df.columns):
