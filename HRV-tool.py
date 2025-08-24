@@ -7,47 +7,35 @@ import plotly.graph_objects as go
 st.set_page_config(layout="wide", page_title="HRV Tool", page_icon="🫀")
 st.title("HRV-tool")
 
-uploaded_file = st.file_uploader(
-    "Upload een bestand met: timestamp,  rr,  since_start", 
-    type=["csv", "txt"]
-)
+# Bestand uploaden
+bestand = st.file_uploader("Upload je CSV-bestand", type=["csv", "txt"])
 
-if uploaded_file:
+if bestand is not None:
     try:
-        df = pd.read_csv(uploaded_file, header=None)
-    
+        # Inlezen: eerste regel is header, spaties als separator
+        df = pd.read_csv(bestand, sep='\s+', header=0)
     except Exception as e:
-        st.error(f"Kon bestand niet lezen: {e}")
+        st.error(f"Kon bestand niet inlezen: {e}")
         st.stop()
-        # CSV inlezen
-    
-        # Kolomnamen expliciet instellen
-        df.columns = ['timestamp', ' rr', ' since_start']
-        
-    except:
-        st.error("Kon kolommen niet omzetten naar numeriek formaat.")
+
+        st.write("Kolommen gevonden:", df.columns.tolist())
+
+        # Controleer vereiste kolommen
+        required_cols = {"rr", "since_start"}
+    if not required_cols.issubset(df.columns.str.lower()):
+        st.error(f"Bestand mist vereiste kolommen: {required_cols}")
         st.stop()
-   
-    # Opschonen van waarden
+
+    # Opschonen: spaties verwijderen
         df['rr'] = df['rr'].astype(str).str.strip()
-        df[' since_start'] = df[' since_start'].astype(str).str.strip()
+        df['since_start'] = df['since_start'].astype(str).str.strip()
 
-    # Vereiste kolommen checken
-    if not {" rr", " since_start"}.issubset(df.columns):
-        st.error("Bestand mist vereiste kolommen: ' rr' en ' since_start'.")
-        st.stop()
-
-    # Opschonen van waarden
-        df['rr'] = df['rr'].astype(str).str.strip()
-        df[' since_start'] = df[' since_start'].astype(str).str.strip()
-
-    # Filter alleen numerieke waarden
+    # Alleen numerieke waarden behouden
         df = df[df['rr'].str.replace('.', '', 1).str.isnumeric()]
         df = df[df['since_start'].str.replace('.', '', 1).str.isnumeric()]
 
-    # Check of er nog data over is
     if df.empty:
-        st.error("Geen geldige gegevens gevonden na opschonen.")
+        st.error("Geen geldige gegevens gevonden in CSV na opschonen.")
         st.stop()
 
     # Omzetten naar float en NumPy-array
