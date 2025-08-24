@@ -23,6 +23,9 @@ if uploaded_file:
     except:
         st.error("Kon kolommen niet omzetten naar numeriek formaat.")
         st.stop()
+   
+    # Zet de RR-waarden om naar float en daarna naar NumPy-array
+        rr_intervals = np.array(df['rr'].astype(float).values)
 
     # Bereken BPM van volledige reeks
     full_hr = 60000 / rr_intervals
