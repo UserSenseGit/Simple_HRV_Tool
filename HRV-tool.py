@@ -22,7 +22,7 @@ if uploaded_file:
         # CSV inlezen
     
         # Kolomnamen expliciet instellen
-        df.columns = ['timestamp', 'rr', 'since_start']
+        df.columns = ['timestamp', ' rr', ' since_start']
         
     except:
         st.error("Kon kolommen niet omzetten naar numeriek formaat.")
