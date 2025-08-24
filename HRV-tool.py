@@ -30,7 +30,7 @@ if uploaded_file:
    
     # Opschonen van waarden
         df['rr'] = df['rr'].astype(str).str.strip()
-        df['since_start'] = df['since_start'].astype(str).str.strip()
+        df[' since_start'] = df[' since_start'].astype(str).str.strip()
 
     # Vereiste kolommen checken
     if not {" rr", " since_start"}.issubset(df.columns):
@@ -39,7 +39,7 @@ if uploaded_file:
 
     # Opschonen van waarden
         df['rr'] = df['rr'].astype(str).str.strip()
-        df['since_start'] = df['since_start'].astype(str).str.strip()
+        df[' since_start'] = df[' since_start'].astype(str).str.strip()
 
     # Filter alleen numerieke waarden
         df = df[df['rr'].str.replace('.', '', 1).str.isnumeric()]
