@@ -18,6 +18,15 @@ if uploaded_file:
     except Exception as e:
         st.error(f"Kon bestand niet lezen: {e}")
         st.stop()
+        # CSV inlezen
+        
+# Kolomnamen strippen van spaties en lowercase maken
+        df.columns = df.columns.str.strip().str.lower()
+
+# Nu werken de checks met lowercase
+    if not {"rr", "since_start"}.issubset(df.columns):
+        st.error("Bestand mist vereiste kolommen: 'rr' en 'since_start'.")
+        st.stop()
 
     # Verwachte kolommen: timestamp, rr, since_start
     if not {"rr", "since_start"}.issubset(df.columns):
