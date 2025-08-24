@@ -5,10 +5,10 @@ import pyhrv.time_domain as td
 import plotly.graph_objects as go
 
 st.set_page_config(layout="wide", page_title="HRV Tool", page_icon="🫀")
-st.title("HRV-tool (since_start versie)")
+st.title("HRV-tool")
 
 uploaded_file = st.file_uploader(
-    "Upload een bestand met kolommen: timestamp, rr, since_start (csv)", 
+    "Upload een bestand met: timestamp, rr, since_start", 
     type=["csv", "txt"]
 )
 
@@ -20,39 +20,6 @@ if uploaded_file:
         st.stop()
         # CSV inlezen
         
-# Kolomnamen strippen van spaties en lowercase maken
-        df.columns = df.columns.str.strip().str.lower()
-
-# Nu werken de checks met lowercase
-    if not {"rr", "since_start"}.issubset(df.columns):
-        st.error("Bestand mist vereiste kolommen: 'rr' en 'since_start'.")
-        st.stop()
-
-    # Verwachte kolommen: timestamp, rr, since_start
-    if not {"rr", "since_start"}.issubset(df.columns):
-        st.error("Bestand mist vereiste kolommen: 'rr' en 'since_start'.")
-        st.stop()
-    # Opschonen: spaties en onzichtbare tekens verwijderen
-        df['rr'] = df['rr'].astype(str).str.strip()
-        df['since_start'] = df['since_start'].astype(str).str.strip()
-
-# Alleen numerieke waarden behouden
-        df = df[df['rr'].str.replace('.', '', 1).str.isnumeric()]
-        df = df[df['since_start'].str.replace('.', '', 1).str.isnumeric()]
-
-# Omzetten naar float
-    try:
-        rr_intervals = df['rr'].astype(float).values
-        x_axis = df['since_start'].astype(float).values
-    except ValueError as e:
-        st.error(f"Kon kolommen niet omzetten naar numeriek formaat: {e}")
-        st.stop()
-
-        st.success("CSV succesvol ingelezen en opgeschoond!")
-
-    try:
-        rr_intervals = df["rr"].astype(float).values
-        x_axis = df["since_start"].astype(float).values
     except:
         st.error("Kon kolommen niet omzetten naar numeriek formaat.")
         st.stop()
