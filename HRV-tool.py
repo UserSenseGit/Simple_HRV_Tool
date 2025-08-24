@@ -28,8 +28,8 @@ if uploaded_file:
         df.columns = df.columns.str.strip().str.lower()
 
     # Vereiste kolommen checken
-    if not {"rr", "since_start"}.issubset(df.columns):
-        st.error("Bestand mist vereiste kolommen: 'rr' en 'since_start'.")
+    if not {" rr", " since_start"}.issubset(df.columns):
+        st.error("Bestand mist vereiste kolommen: ' rr' en ' since_start'.")
         st.stop()
 
     # Opschonen van waarden
