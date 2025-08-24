@@ -35,7 +35,7 @@ if uploaded_file:
     try:
         rr_intervals = df['rr'].astype(float).values
         x_axis = df['since_start'].astype(float).values
-except ValueError as e:
+    except ValueError as e:
         st.error(f"Kon kolommen niet omzetten naar numeriek formaat: {e}")
         st.stop()
 
