@@ -5,20 +5,30 @@ import pyhrv.time_domain as td
 import plotly.graph_objects as go
 
 st.set_page_config(layout="wide", page_title="HRV Tool", page_icon="🫀")
-st.title("HRV-tool")
+st.title("HRV-tool (since_start versie)")
 
-uploaded_file = st.file_uploader("Upload een R-R interval bestand (txt of csv, 1 kolom, ms)", type=["txt", "csv"])
+uploaded_file = st.file_uploader(
+    "Upload een bestand met kolommen: timestamp, rr, since_start (csv)", 
+    type=["csv", "txt"]
+)
 
 if uploaded_file:
     try:
-        df = pd.read_csv(uploaded_file, header=None, delim_whitespace=True)
-    except:
-        df = pd.read_csv(uploaded_file, header=None)
+        df = pd.read_csv(uploaded_file)
+    except Exception as e:
+        st.error(f"Kon bestand niet lezen: {e}")
+        st.stop()
+
+    # Verwachte kolommen: timestamp, rr, since_start
+    if not {"rr", "since_start"}.issubset(df.columns):
+        st.error("Bestand mist vereiste kolommen: 'rr' en 'since_start'.")
+        st.stop()
 
     try:
-        rr_intervals = df[0].astype(float).values
+        rr_intervals = df["rr"].astype(float).values
+        x_axis = df["since_start"].astype(float).values
     except:
-        st.error("Kon de gegevens niet omzetten naar numerieke R-R intervallen.")
+        st.error("Kon kolommen niet omzetten naar numeriek formaat.")
         st.stop()
 
     # Bereken BPM van volledige reeks
@@ -37,6 +47,7 @@ if uploaded_file:
     mask = (full_hr >= bpm_min) & (full_hr <= bpm_max)
     rr_intervals = rr_intervals[mask]
     full_hr = full_hr[mask]
+    x_axis = x_axis[mask]
 
     st.markdown("### Gemeten hartslag (BPM) over gefilterde reeks")
 
@@ -52,7 +63,7 @@ if uploaded_file:
         for i in range(num_regions):
             st.markdown(f"#### Regio {i+1}")
             slider = st.slider(
-                f"Selecteer regio {i+1}",
+                f"Selecteer regio {i+1} (op basis van index in gefilterde reeks)",
                 min_value=0,
                 max_value=len(rr_intervals) - 1,
                 value=(0, min(50, len(rr_intervals) - 1)),
@@ -64,38 +75,39 @@ if uploaded_file:
             slider_ranges.append((start, end))
 
             if len(region) < 2:
-               st.warning(f"Regio {i+1} heeft te weinig data (<2).")
+                st.warning(f"Regio {i+1} heeft te weinig data (<2).")
             else:
-               gebruiken = st.checkbox(f"Regio {i+1} gebruiken in analyse?", value=True, key=f"use_{i}")
-            if gebruiken:
-                selections.append(region)
-                rmssd = td.rmssd(region)['rmssd']
-                rmssd_per_regio.append({
-                    "Regio": f"{i+1}",
-                    "Start": start,
-                    "Einde": end,
-                    "Waarden": len(region),
-                    "RMSSD (ms)": round(rmssd, 2)
-                })
+                gebruiken = st.checkbox(f"Regio {i+1} gebruiken in analyse?", value=True, key=f"use_{i}")
+                if gebruiken:
+                    selections.append(region)
+                    rmssd = td.rmssd(region)['rmssd']
+                    rmssd_per_regio.append({
+                        "Regio": f"{i+1}",
+                        "Start (since_start)": x_axis[start],
+                        "Einde (since_start)": x_axis[end-1] if end > start else x_axis[start],
+                        "Waarden": len(region),
+                        "RMSSD (ms)": round(rmssd, 2)
+                    })
 
     # Maak interactieve plotly-grafiek
     fig = go.Figure()
-    fig.add_trace(go.Scatter(y=full_hr, mode='lines', name='HR (BPM)', line=dict(color='blue')))
+    fig.add_trace(go.Scatter(x=x_axis, y=full_hr, mode='lines', name='HR (BPM)', line=dict(color='blue')))
 
     kleuren = ['rgba(255,0,0,0.2)', 'rgba(0,255,0,0.2)', 'rgba(0,0,255,0.2)', 'rgba(255,165,0,0.2)', 
                'rgba(128,0,128,0.2)', 'rgba(0,206,209,0.2)', 'rgba(255,20,147,0.2)', 'rgba(0,100,0,0.2)']
 
     for i, (start, end) in enumerate(slider_ranges):
-        fig.add_vrect(
-            x0=start,
-            x1=end,
-            fillcolor=kleuren[i % len(kleuren)],
-            opacity=0.3,
-            layer="below",
-            line_width=0,
-            annotation_text=f"Regio {i+1}",
-            annotation_position="top left"
-        )
+        if start < end:
+            fig.add_vrect(
+                x0=x_axis[start],
+                x1=x_axis[end-1],
+                fillcolor=kleuren[i % len(kleuren)],
+                opacity=0.3,
+                layer="below",
+                line_width=0,
+                annotation_text=f"Regio {i+1}",
+                annotation_position="top left"
+            )
 
     st.markdown("### Y-as instellingen (BPM bereik)")
     if len(full_hr) > 0:
@@ -111,7 +123,7 @@ if uploaded_file:
 
     fig.update_layout(
         title="Gemeten hartslag (BPM) over gefilterde reeks",
-        xaxis_title="Index",
+        xaxis_title="Since start (s)",
         yaxis_title="BPM",
         height=350,
         margin=dict(l=10, r=10, t=40, b=20),
