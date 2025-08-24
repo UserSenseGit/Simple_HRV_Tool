@@ -18,11 +18,13 @@ if bestand is not None:
         st.error(f"Kon bestand niet inlezen: {e}")
         st.stop()
 
+    # Kolommen printen voor debug
         st.write("Kolommen gevonden:", df.columns.tolist())
 
-        # Controleer vereiste kolommen
+    # Controleer vereiste kolommen
         required_cols = {"rr", "since_start"}
-    if not required_cols.issubset(df.columns.str.lower()):
+        columns_set = set(df.columns.str.lower())  # lowercase en omzetten naar set
+    if not required_cols.issubset(columns_set):
         st.error(f"Bestand mist vereiste kolommen: {required_cols}")
         st.stop()
 
@@ -41,7 +43,6 @@ if bestand is not None:
     # Omzetten naar float en NumPy-array
         rr_intervals = np.array(df['rr'].astype(float).values)
         x_axis = np.array(df['since_start'].astype(float).values)
-
     
     # Bereken BPM van volledige reeks
         full_hr = 60000 / rr_intervals
