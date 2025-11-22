@@ -119,7 +119,7 @@ if uploaded_file:
         st.warning("Couldn't find a clear R-R column automatically. Select the correct column below.")
         manual = True
     else:
-        st.success(f"Gedetecteerde R-R kolom: **{rr_col}**")
+        st.success(f"Detected R-R column: **{rr_col}**")
         manual = st.checkbox("Select column manually?", value=False)
 
     if manual:
