@@ -7,15 +7,14 @@ import io
 import pyhrv.time_domain as td
 import plotly.graph_objects as go
 
-st.set_page_config(layout="wide", page_title="HRV Tool (Nieuwe CSV)", page_icon="🫀")
-st.title("HRV-tool — nieuwe CSV-indeling")
+st.set_page_config(layout="wide", page_title="Simple HRV Tool", page_icon="🫀")
+st.title("Simple HRV Tool")
 
 st.markdown(
-    "Upload een **.csv** met R-R intervallen. "
-    "Het script probeert automatisch de juiste kolom te vinden (bijv. `rr`, `rri`, `ibi`, `rr_ms`)."
+    "Upload a **.csv** with R-R intervals. "
 )
 
-uploaded_file = st.file_uploader("Kies een CSV-bestand", type=["csv"])
+uploaded_file = st.file_uploader("Choose a CSV-file", type=["csv"])
 
 # ----------------- helpers -----------------
 def _normalize(name: str) -> str:
@@ -103,11 +102,11 @@ def _find_rr_column(df: pd.DataFrame):
 if uploaded_file:
     df = _try_read_csv(uploaded_file)
     if df is None or len(df) == 0:
-        st.error("Kon het CSV-bestand niet inlezen. Controleer het formaat.")
+        st.error("Could not read the cvs-file. Check the format.")
         st.stop()
 
     # Show quick preview
-    st.markdown("#### Voorbeeld van de ingelezen data")
+    st.markdown("#### example of the read in data")
     st.dataframe(df.head(), use_container_width=True)
 
     # Try to detect RR column
@@ -117,20 +116,20 @@ if uploaded_file:
     cols = list(df.columns)
     manual = False
     if rr_col is None:
-        st.warning("Kon geen duidelijke R-R kolom automatisch vinden. Selecteer de juiste kolom hieronder.")
+        st.warning("Couldn't find a clear R-R column automatically. Select the correct column below.")
         manual = True
     else:
         st.success(f"Gedetecteerde R-R kolom: **{rr_col}**")
-        manual = st.checkbox("Kolom handmatig kiezen?", value=False)
+        manual = st.checkbox("Select column manually?", value=False)
 
     if manual:
-        rr_choice = st.selectbox("Kies de kolom met R-R intervallen (in ms)", options=cols)
+        rr_choice = st.selectbox("Select the column with R-R intervals (in ms)", options=cols)
         rr_series = _coerce_numeric(df[rr_choice])
         rr_col = rr_choice
 
     # Validate
     if rr_series is None or rr_series.notna().sum() < 2:
-        st.error("Bestand bevat geen bruikbare R-R kolom (minstens 2 numerieke waarden vereist).")
+        st.error("File does not contain a usable R-R column (at least 2 numeric values ​​required).")
         st.stop()
 
     # Clean final series
@@ -139,7 +138,7 @@ if uploaded_file:
     rr_ms = rr_ms[rr_ms > 0]
 
     if rr_ms.size < 2:
-        st.error("Onvoldoende geldige R-R waarden na schonen.")
+        st.error("Insufficient valid R-R values ​​after cleaning.")
         st.stop()
 
     # Compute HR in BPM
@@ -155,7 +154,7 @@ if uploaded_file:
         max_hr = min(max_hr + 1, 220)
 
     bpm_min, bpm_max = st.slider(
-        "Selecteer BPM-bereik (waarden buiten dit bereik worden genegeerd)",
+        "Select BPM range (values ​​outside this range will be ignored)",
         min_value=30, max_value=220, value=(min_hr, max_hr), step=1
     )
 
@@ -164,22 +163,22 @@ if uploaded_file:
     full_hr = full_hr[mask]
 
     if rr_ms.size < 2:
-        st.error("Te weinig datapunten binnen het gekozen BPM-bereik.")
+        st.error("Too few data points within the selected BPM range.")
         st.stop()
 
-    st.markdown("### Gemeten hartslag (BPM) over gefilterde reeks")
+    st.markdown("### Measured heart rate (BPM) over filtered range")
 
-    num_regions = st.number_input("Aantal regio’s", min_value=1, max_value=10, value=1, step=1)
+    num_regions = st.number_input("Number of regions", min_value=1, max_value=10, value=1, step=1)
 
     selections = []
     rmssd_per_regio = []
     slider_ranges = []
 
-    with st.expander("🛠️ Selecteer regio’s"):
+    with st.expander("🛠️ select regions"):
         for i in range(num_regions):
-            st.markdown(f"#### Regio {i+1}")
+            st.markdown(f"#### Region {i+1}")
             slider = st.slider(
-                f"Selecteer regio {i+1}",
+                f"Select region {i+1}",
                 min_value=0,
                 max_value=len(rr_ms) - 1,
                 value=(0, min(50, len(rr_ms) - 1)),
@@ -191,17 +190,17 @@ if uploaded_file:
             slider_ranges.append((start, end))
 
             if len(region) < 2:
-                st.warning(f"Regio {i+1} heeft te weinig data (<2).")
+                st.warning(f"Region {i+1} has too little data (<2).")
             else:
-                gebruiken = st.checkbox(f"Regio {i+1} gebruiken in analyse?", value=True, key=f"use_{i}")
+                gebruiken = st.checkbox(f"Region {i+1} use in analysis?", value=True, key=f"use_{i}")
                 if gebruiken:
                     selections.append(region)
                     rmssd = td.rmssd(region)['rmssd']
                     rmssd_per_regio.append({
-                        "Regio": f"{i+1}",
+                        "Region": f"{i+1}",
                         "Start": start,
-                        "Einde": end,
-                        "Waarden": len(region),
+                        "End": end,
+                        "Values": len(region),
                         "RMSSD (ms)": round(rmssd, 2)
                     })
 
@@ -222,16 +221,16 @@ if uploaded_file:
             annotation_text=f"Regio {i+1}", annotation_position="top left"
         )
 
-    st.markdown("### Y-as instellingen (BPM bereik)")
+    st.markdown("### Y-axis settings (BPM range)")
     y_min = int(max(30, np.floor(np.min(full_hr)) - 5))
     y_max = int(min(220, np.ceil(np.max(full_hr)) + 5))
     y_min, y_max = st.slider(
-        "Stel BPM bereik in voor verticale zoom",
+        "Set BPM range for vertical zoom",
         min_value=30, max_value=220, value=(y_min, y_max), step=1
     )
 
     fig.update_layout(
-        title="Gemeten hartslag (BPM) over gefilterde reeks",
+        title="Measured heart rate (BPM) over filtered range",
         xaxis_title="Index",
         yaxis_title="BPM",
         height=350,
@@ -243,21 +242,22 @@ if uploaded_file:
     st.plotly_chart(fig, use_container_width=True)
 
     if rmssd_per_regio:
-        st.markdown("### RMSSD per regio")
+        st.markdown("### RMSSD by region")
         st.dataframe(pd.DataFrame(rmssd_per_regio), use_container_width=True)
 
-    if st.button("Bereken gecombineerde waarden"):
+    if st.button("Calculate combined values"):
         if len(selections) == 0:
-            st.warning("Geen geldige regio's geselecteerd.")
+            st.warning("No valid regions selected.")
         else:
             combined = np.concatenate(selections)
             rmssd_combined = td.rmssd(combined)['rmssd']
             mean_rr = float(np.mean(combined))
             mean_bpm = 60000.0 / mean_rr
 
-            st.markdown("### Gecombineerde analyse van alle regio’s")
-            st.success(f"**RMSSD gecombineerd:** {rmssd_combined:.2f} ms")
-            st.success(f"**Gemiddelde hartslag:** {mean_bpm:.1f} bpm")
+            st.markdown("### Combined analysis of all regions")
+            st.success(f"**Average heart rate:** {mean_bpm:.1f} bpm")
+            st.success(f"**RMSSD combined:** {rmssd_combined:.2f} ms")
+            
 
             combined_hr = 60000.0 / combined
             st.line_chart(combined_hr, height=250, use_container_width=True)
