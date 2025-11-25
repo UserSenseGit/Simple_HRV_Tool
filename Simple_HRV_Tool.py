@@ -249,16 +249,31 @@ if uploaded_file:
         if len(selections) == 0:
             st.warning("No valid regions selected.")
         else:
-            combined = np.concatenate(selections)
-            rmssd_combined = td.rmssd(combined)['rmssd']
-            mean_rr = float(np.mean(combined))
+            
+            total_beats = 0
+            weighted_rmssd_sum = 0
+            
+            for item in rmssd_per_regio:
+                n_beats = item['Values']
+                val_rmssd = item['RMSSD (ms)']
+                
+                
+                weighted_rmssd_sum += (val_rmssd * n_beats)
+                total_beats += n_beats
+            
+            
+            rmssd_combined = weighted_rmssd_sum / total_beats
+            
+            
+            combined_arrays = np.concatenate(selections)
+            mean_rr = float(np.mean(combined_arrays))
             mean_bpm = 60000.0 / mean_rr
 
             st.markdown("### Combined analysis of all regions")
+            st.info("Calculation method: Weighted average of individual regions (artifacts between regions are ignored).")
             st.success(f"**Average heart rate:** {mean_bpm:.1f} bpm")
             st.success(f"**RMSSD combined:** {rmssd_combined:.2f} ms")
             
-
-            combined_hr = 60000.0 / combined
+            # Visualisatie mag wel geconcateneerd zijn (zolang je weet dat de x-as niet continu is)
+            combined_hr = 60000.0 / combined_arrays
             st.line_chart(combined_hr, height=250, use_container_width=True)
-
