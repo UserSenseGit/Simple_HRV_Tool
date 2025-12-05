@@ -185,7 +185,7 @@ if uploaded_file:
     st.markdown("### Measured heart rate (BPM) over filtered range")
 
     # Dynamic Region Selection
-    num_regions = st.number_input("Number of regions", min_value=1, max_value=10, value=1, step=1)
+    num_regions = st.number_input("Number of regions", min_value=1, max_value=15, value=1, step=1)
 
     selections = []      # Stores the raw arrays for visualization/BPM
     rmssd_per_regio = [] # Stores the calculated metrics per region
